@@ -1,0 +1,83 @@
+---
+title: "Assignment #1 Literate Programming"
+author: "Kyle Martin"
+format: html
+code-fold: true
+toc: true
+toc-depth: 3
+toc-title: Table of Contents
+number-sections: true
+number-depth: 3
+---
+# The University of Idaho
+
+BCB 520: Data Visualization Course!😁
+
+## DATA
+
+For this assignment we will be looking at how summary statistics can sometimes be misleading and highlight the need for data visualization in regards to understanding ones data set. 
+To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+**Anscombe’s Quartet**
+The four x-y pairs have identical summary statistics:
+
+```{r}
+#| output: false
+rm(list = ls())
+library(ggplot2)
+library(grid)
+library(gridExtra)
+library(datasets)
+library(tidyverse)
+library(dplyr)
+library(chron)
+library(sp)
+library(car)
+library(lme4)
+library(overlap)
+library(AICcmodavg)
+library(rainbow)
+library(viridis)
+```
+
+```{r}
+datasets::anscombe
+```
+
+## Example Problem
+
+**Hypothesis for Replicates**
+
+## Summary Statistics 
+
+```{r}
+tidy_anscombe <- anscombe %>%
+ pivot_longer(cols = everything(),
+              names_to = c(".value", "set"),
+              names_pattern = "(.)(.)")
+tidy_anscombe_summary <- tidy_anscombe %>%
+  group_by(set) %>%
+  summarise(across(.cols = everything(),
+                   .fns = lst(min,max,median,mean,sd,var),
+                   .names = "{col}_{fn}"))
+#> `summarise()` ungrouping output (override with `.groups` argument)
+
+vars<-c("set", "x_mean", "x_var",  "y_mean", "y_var")
+Stuff<- as.data.frame(tidy_anscombe_summary[vars])
+knitr::kable(Stuff)
+```
+
+## Visualization reveals hidden patterns! 
+
+```{r}
+ggplot(tidy_anscombe,
+       aes(x = x,
+           y = y)) +
+  geom_point() +
+  geom_point(data = tidy_anscombe_summary, aes(x=x_mean, y = y_mean, color = "blue", size = 4),
+             show.legend = FALSE)+
+  facet_wrap(~set) +
+  geom_smooth(method = "lm", se = FALSE)
+```
